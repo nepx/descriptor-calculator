@@ -10,8 +10,8 @@
 	<div>
 		<label for="stypegen">General Segment Type: </label>
 		<select id="stypegen" onchange="replaceType()">
-			<option value="app">Application (Code/Data)</option>
-			<option value="sys">System (IDT/Gate/TSS/etc)</option>
+			<option value="0">Application (Code/Data)</option>
+			<option value="1">System (IDT/Gate/TSS/etc)</option>
 		</select>
 	</div>
 	<div id="appsegs">
@@ -109,27 +109,35 @@
 						</code>
 		<br/> </div>
 	<script>
-	var curType = "app",
-		altType = "sys";
-
+        var types = ["app", "sys"];
+	var curType = null,
+		altType = null;
+asdfasdf
 	function replaceType() {
-		var temp = curType;
-		curType = altType;
-		altType = temp;
+        var curIdx = parseInt($("stypegen").value);
+        console.log(curIdx);
+        curType = types[curIdx];
+        altType = types[curIdx ^ 1];
 		$(curType + "segs").style.display = "block";
 		$(altType + "segs").style.display = "none";
-	}
-	var curAppType = "data",
-		altAppType = "code";
+    }
+    replaceType();
+    var appTypes = ["data", "code"];
+	var curAppType = null,
+		altAppType = null;
 
 	function switchAppType() {
 		if(curType !== "app") return;
-		var temp = curAppType;
-		curAppType = altAppType;
-		altAppType = temp;
+        var curIdx = parseInt($("apptypes").value);
+
+        curAppType = appTypes[curIdx >> 3];
+        altAppType = appTypes[curIdx >> 3 ^ 1];
+
 		$(curAppType + "seg").style.display = "block";
 		$(altAppType + "seg").style.display = "none";
-	}
+    }
+    switchAppType();
+
 	// sometimes, browsers leave the values filled out for you on load
 	if($("stypegen").value !== curType) replaceType();
 	if($("apptypes").value !== curAppType) switchAppType();
