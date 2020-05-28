@@ -216,7 +216,7 @@
 			var avl = getBool("avl");
 			nval |= avl << 4;
 			var sz = getBool("sz");
-			nval |= avl << 6;
+			nval |= sz << 6;
 			nval |= gran << 7;
 			console.log(gran, limit.toString(16), nval.toString(16));
 			desc8[6] = nval;
