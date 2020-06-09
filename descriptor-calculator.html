@@ -2,58 +2,68 @@
 <html>
 
 <head>
-	<title>x86 Descriptor Calculator</title>
-	<meta charset="UTF-8"> </head>
+    <title>x86 Descriptor Calculator</title>
+    <meta charset="UTF-8"> </head>
 
 <body>
-	<p>Tired of fiddling with bits? Never fear -- the x86 Descriptor Calculator is here!</p>
-	<div>
-		<label for="stypegen">General Segment Type: </label>
-		<select id="stypegen" onchange="replaceType()">
+    <p>Tired of fiddling with bits? Never fear -- the x86 Descriptor Calculator is here!</p>
+    <div>
+        <label for="stypegen">General Segment Type: </label>
+        <select id="stypegen" onchange="replaceType()">
 			<option value="0">Application (Code/Data)</option>
 			<option value="1">System (IDT/Gate/TSS/etc)</option>
 		</select>
-	</div>
-	<div id="appsegs">
-		<p>
-			<label for="base">Base: </label>
-			<input type="text" id="base" value="0x00000000" />
-			<br />
-			<label for="limit">Limit: </label>
-			<input type="text" id="limit" value="0xFFFFFFFF" />
-			<br />
-			<label for="appsegtype">Application segment type: </label>
-			<select id="apptypes" onchange="switchAppType()">
+    </div>
+    <div id="appsegs">
+        <p>
+            <label for="base">Base: </label>
+            <input type="text" id="base" value="0x00000000" />
+            <br />
+            <label for="limit">Limit: </label>
+            <input type="text" id="limit" value="0xFFFFFFFF" />
+            <br />
+            <label for="appsegtype">Application segment type: </label>
+            <select id="apptypes" onchange="switchAppType()">
 				<option value="0">Data</option>
 				<option value="8">Code</option>
 			</select>
-		</p>
-		<div id="dataseg">
-			<label for="expand">Expand down?</label>
-			<input type="checkbox" id="expand" />
-			<br />
-			<label for="writable">Writable?</label>
-			<input type="checkbox" id="writable" />
-			<br /> </div>
-		<div id="codeseg" style="display:none">
-			<label for="conforming">Conforming?</label>
-			<input type="checkbox" id="conforming" />
-			<br />
-			<label for="readable">Readable?</label>
-			<input type="checkbox" id="readable" checked />
-			<br /> </div>
-		<label for="accessed">Accessed?</label>
-		<input type="checkbox" id="accessed" />
-		<br /> </div>
-	<div id="syssegs" style="display:none">
-		<label for="sel">Selector: </label>
-		<input type="text" id="sel" value="0x0000" />
-		<br />
-		<label for="offset">Offset: </label>
-		<input type="text" id="offset" value="0x00000000" />
-		<br />
-		<label for="systypes">System Segment Type</label>
-		<select id="systypes" onchange="updateParams(this.value)">
+        </p>
+        <div id="dataseg">
+            <label for="expand">Expand down?</label>
+            <input type="checkbox" id="expand" />
+            <br />
+            <label for="writable">Writable?</label>
+            <input type="checkbox" id="writable" />
+            <br /> </div>
+        <div id="codeseg" style="display:none">
+            <label for="conforming">Conforming?</label>
+            <input type="checkbox" id="conforming" />
+            <br />
+            <label for="readable">Readable?</label>
+            <input type="checkbox" id="readable" checked />
+            <br /> </div>
+        <label for="accessed">Accessed?</label>
+        <input type="checkbox" id="accessed" />
+        <br /> </div>
+    <div id="syssegs" style="display:none">
+        <div id="seloffs">
+            <label for="sel">Selector: </label>
+            <input type="text" id="sel" value="0x0000" />
+            <br />
+            <label for="offset">Offset: </label>
+            <input type="text" id="offset" value="0x00000000" />
+            <br />
+        </div>
+        <div id="baseoffs">
+            <label for="base_tss">Base: </label>
+            <input type="text" id="base_tss" value="0x00000000" />
+            <br />
+            <label for="limit_tss">Limit (size of TSS): </label>
+            <input type="text" id="limit_tss" value="134" />
+            <br />
+        </div>
+        <label for="systypes">System Segment Type</label>
+        <select id="systypes" onchange="updateParams(this.value)">
 			<option value="0">Invalid0</option>
 			<option value="1">286 Available TSS</option>
 			<option value="2">Local Descriptor Table</option>
@@ -71,171 +81,217 @@
 			<option value="14">386 Interrupt Gate</option>
 			<option value="15">386 Trap Gate</option>
 		</select>
-		<div id="callgate">
-			<label for="params">Number of call gate parameters (0-31): </label>
-			<input type="text" id="params" value="0">
-			<br /> </div>
-		<script>
-		function updateParams(e) {
-			if(e === "12" || e === "4") {
-				$("callgate").style.display = "block";
-			} else $("callgate").style.display = "none";
-		}
-		</script>
-	</div>
-	<label for="dpl">DPL (Descriptor Privilege Level): </label>
-	<input type="text" id="dpl" value="0">
-	<br />
-	<label for="present">Present? </label>
-	<input type="checkbox" id="present" checked/>
-	<br />
-	<label for="avl">Available bit (for your personal use): </label>
-	<input type="checkbox" id="avl" />
-	<br />
-	<label for="sz">32-bit? (otherwise 16-bit) </label>
-	<input type="checkbox" id="sz" checked/>
-	<br />
-	<button onclick="recalc()">Calculate Descriptor!</button>
-	<br /> <span id="msg" style="color:red"></span>
-	<div>
-		<p>Your code:</p> <code>dd 
+        <div id="callgate">
+            <label for="params">Number of call gate parameters (0-31): </label>
+            <input type="text" id="params" value="0">
+            <br /> </div>
+        <script>
+            function updateParams(e) {
+                e = parseInt(e);
+                switch (e) {
+                    case 1:
+                    case 3:
+                    case 9:
+                    case 11:
+                        $("callgate").style.display = "none";
+                        $("seloffs").style.display = "none";
+                        $("baseoffs").style.display = "block";
+                        break;
+                    case 12:
+                    case 4:
+                        $("callgate").style.display = "block";
+                        $("seloffs").style.display = "block";
+                        $("baseoffs").style.display = "none";
+                        break;
+                    default:
+                        $("callgate").style.display = "none";
+                        $("seloffs").style.display = "block";
+                        $("baseoffs").style.display = "none";
+                        break;
+                }
+            }
+        </script>
+    </div>
+    <label for="dpl">DPL (Descriptor Privilege Level): </label>
+    <input type="text" id="dpl" value="0">
+    <br />
+    <label for="present">Present? </label>
+    <input type="checkbox" id="present" checked/>
+    <br />
+    <label for="avl">Available bit (for your personal use): </label>
+    <input type="checkbox" id="avl" />
+    <br />
+    <label for="sz">32-bit? (otherwise 16-bit) </label>
+    <input type="checkbox" id="sz" checked/>
+    <br />
+    <button onclick="recalc()">Calculate Descriptor!</button>
+    <br /> <span id="msg" style="color:red"></span>
+    <div>
+        <p>Your code:</p> <code>dd 
 							<span id="dwords">00000000, 00000000</span>
 						</code>
-		<br/> <code>dw 
+        <br/> <code>dw 
 							<span id="words">0000, 0000, 0000, 0000</span>
 						</code>
-		<br/> <code>db 
+        <br/> <code>db 
 							<span id="bytes">00, 00, 00, 00, 00, 00, 00, 00</span>
 						</code>
-		<br/> </div>
-	<script>
+        <br/> </div>
+    <script>
         var types = ["app", "sys"];
-	var curType = null,
-        altType = null;
-        
-	function replaceType() {
-        var curIdx = parseInt($("stypegen").value);
-        console.log(curIdx);
-        curType = types[curIdx];
-        altType = types[curIdx ^ 1];
-		$(curType + "segs").style.display = "block";
-		$(altType + "segs").style.display = "none";
-    }
-    replaceType();
-    var appTypes = ["data", "code"];
-	var curAppType = null,
-		altAppType = null;
+        var curType = null,
+            altType = null;
 
-	function switchAppType() {
-		if(curType !== "app") return;
-        var curIdx = parseInt($("apptypes").value);
+        function replaceType() {
+            var curIdx = parseInt($("stypegen").value);
+            console.log(curIdx);
+            curType = types[curIdx];
+            altType = types[curIdx ^ 1];
+            $(curType + "segs").style.display = "block";
+            $(altType + "segs").style.display = "none";
+        }
+        replaceType();
+        var appTypes = ["data", "code"];
+        var curAppType = null,
+            altAppType = null;
 
-        curAppType = appTypes[curIdx >> 3];
-        altAppType = appTypes[curIdx >> 3 ^ 1];
+        function switchAppType() {
+            if (curType !== "app") return;
+            var curIdx = parseInt($("apptypes").value);
 
-		$(curAppType + "seg").style.display = "block";
-		$(altAppType + "seg").style.display = "none";
-    }
-    switchAppType();
+            curAppType = appTypes[curIdx >> 3];
+            altAppType = appTypes[curIdx >> 3 ^ 1];
 
-	// sometimes, browsers leave the values filled out for you on load
-	if($("stypegen").value !== curType) replaceType();
-	if($("apptypes").value !== curAppType) switchAppType();
+            $(curAppType + "seg").style.display = "block";
+            $(altAppType + "seg").style.display = "none";
+        }
+        switchAppType();
 
-	function $(e) {
-		return document.getElementById(e);
-	}
+        // Update sys segment types
+        updateParams($("systypes").value);
 
-	function getVal(e) {
-		console.log($(e).value);
-		// XXX - this allows users to type in arbitrary expressions
-		return eval($(e).value) | 0;
-	}
+        // sometimes, browsers leave the values filled out for you on load
+        if ($("stypegen").value !== curType) replaceType();
+        if ($("apptypes").value !== curAppType) switchAppType();
 
-	function getBool(e) {
-		return $(e).checked === true;
-	}
+        function $(e) {
+            return document.getElementById(e);
+        }
 
-	function arr2s(arr) {
-		var arr2 = new Array(arr.length);
-		for(var i = 0; i < arr.length; i++) arr2[i] = arr[i] >>> 0;
-		var lut = {
-			2: 8, // 32-bit dwords: 8 nibbles
-			4: 4, // 16-bit words: 4 nibbles
-			8: 2 // 8-bit bytes: 2 nibbles
-		};
-		var l = lut[arr.length];
-		var arr3 = [];
-		for(var i = 0; i < arr.length; i++) {
-			var elt = arr2[i].toString(16);
-			while(elt.length < l) elt = "0" + elt;
-			arr3.push("0x" + elt);
-		}
-		return arr3.join(", ");
-	}
+        function getVal(e) {
+            console.log($(e).value);
+            // XXX - this allows users to type in arbitrary expressions
+            return eval($(e).value) | 0;
+        }
 
-	function recalc() {
-		var base = getVal("base");
-		var limit = getVal("limit") >>> 0;
-		var gran = 0;
-		if(limit >= (1 << 20)) {
-			gran = 1;
-			if((limit & 0xFFF) !== 0xFFF) $("msg").innerHTML = "WARNING: Rounded up to the nearest 4 KB due to granularity";
-			limit >>>= 12;
-		}
-		var desc = new Int32Array(2),
-			desc16 = new Uint16Array(desc.buffer),
-			desc8 = new Uint8Array(desc.buffer);
-		// Create base
-		if(curType === "app") {
-			desc[0] = (limit & 0xFFFF) | (base & 0xFFFF) << 16;
-			desc8[4] = base >> 16 & 0xFF;
-		} else {
-			var sel = getVal("sel"),
-				offset = getVal("offset");
-			desc16[1] = sel;
-			desc16[0] = offset;
-			desc8[4] = 0;
-		}
-		// Get type
-		if(curType === "app") {
-			var cval = getBool("accessed") | 0;
-			if(curAppType === "data") {
-				cval |= getBool("writable") << 1;
-				cval |= getBool("expand") << 2;
-			} else {
-				cval |= getBool("readable") << 1;
-				cval |= getBool("conforming") << 2;
-				cval |= 8;
-			}
-			cval |= 16;
-		} else {
-			var cval = getVal("systypes");
-			if((cval & 7) === 4) desc8[4] = getVal("params") & 31;
-		}
-		console.log("desctype", cval.toString(16), curType, curAppType);
-		var dpl = getVal("dpl");
-		cval |= dpl << 5;
-		var present = getBool("present");
-		cval |= present << 7;
-		desc8[5] = cval;
-		if(curType === "app") {
-			var nval = limit >> 16 & 15;
-			var avl = getBool("avl");
-			nval |= avl << 4;
-			var sz = getBool("sz");
-			nval |= sz << 6;
-			nval |= gran << 7;
-			console.log(gran, limit.toString(16), nval.toString(16));
-			desc8[6] = nval;
-			desc8[7] = base >> 24 & 0xFF;
-		} else desc16[3] = offset >>> 16 & 0xFFFF;
-		// Now print it
-		$("dwords").innerHTML = arr2s(desc);
-		$("words").innerHTML = arr2s(desc16);
-		$("bytes").innerHTML = arr2s(desc8);
-	}
-	</script>
+        function getBool(e) {
+            return $(e).checked === true;
+        }
+
+        function arr2s(arr) {
+            var arr2 = new Array(arr.length);
+            for (var i = 0; i < arr.length; i++) arr2[i] = arr[i] >>> 0;
+            var lut = {
+                2: 8, // 32-bit dwords: 8 nibbles
+                4: 4, // 16-bit words: 4 nibbles
+                8: 2 // 8-bit bytes: 2 nibbles
+            };
+            var l = lut[arr.length];
+            var arr3 = [];
+            for (var i = 0; i < arr.length; i++) {
+                var elt = arr2[i].toString(16);
+                while (elt.length < l) elt = "0" + elt;
+                arr3.push("0x" + elt);
+            }
+            return arr3.join(", ");
+        }
+
+        function recalc() {
+            var base = getVal("base");
+            var limit = getVal("limit") >>> 0;
+            var gran = 0;
+            if (limit >= (1 << 20)) {
+                gran = 1;
+                if ((limit & 0xFFF) !== 0xFFF) {
+                    $("msg").innerHTML = "WARNING: Rounded up to the nearest 4 KB due to granularity";
+                }
+                limit >>>= 12;
+            }
+            var desc = new Int32Array(2),
+                desc16 = new Uint16Array(desc.buffer),
+                desc8 = new Uint8Array(desc.buffer);
+
+
+            const tss_segs = [1, 3, 9, 11];
+            var isTSS = curType === "sys" && (tss_segs.indexOf(getVal("systypes")) !== -1);
+            console.log("is tss?", isTSS);
+            // Create base
+            if (curType === "app") {
+                desc[0] = (limit & 0xFFFF) | (base & 0xFFFF) << 16;
+                desc8[4] = base >> 16 & 0xFF;
+            } else if (isTSS) {
+                limit = getVal("limit_tss");
+                base = getVal("base_tss");
+                if (limit >= (1 << 20)) {
+                    gran = 1;
+                    if ((limit & 0xFFF) !== 0xFFF) {
+                        $("msg").innerHTML = "WARNING: Rounded up to the nearest 4 KB due to granularity";
+                    }
+                    limit >>>= 12;
+                }
+                desc[0] = (limit & 0xFFFF) | (base & 0xFFFF) << 16;
+                desc8[4] = base >> 16 & 0xFF;
+                console.log(base, limit.toString(16));
+                console.log(desc);
+            } else {
+                var sel = getVal("sel"),
+                    offset = getVal("offset");
+                desc16[1] = sel;
+                desc16[0] = offset;
+                desc8[4] = 0;
+            }
+            // Get type
+            if (curType === "app") {
+                var cval = getBool("accessed") | 0;
+                if (curAppType === "data") {
+                    cval |= getBool("writable") << 1;
+                    cval |= getBool("expand") << 2;
+                } else {
+                    cval |= getBool("readable") << 1;
+                    cval |= getBool("conforming") << 2;
+                    cval |= 8;
+                }
+                cval |= 16;
+            } else {
+                var cval = getVal("systypes");
+                if ((cval & 7) === 4) desc8[4] = getVal("params") & 31;
+            }
+            console.log(isTSS, "desctype", cval.toString(16), curType, curAppType);
+            var dpl = getVal("dpl");
+            cval |= dpl << 5;
+            var present = getBool("present");
+            cval |= present << 7;
+            desc8[5] = cval;
+            if (curType === "app" || isTSS) {
+                var nval = limit >> 16 & 15;
+                if (!isTSS) {
+                    // These bits don't have anything to do with the TSS. 
+                    var avl = getBool("avl");
+                    nval |= avl << 4;
+                    var sz = getBool("sz");
+                    nval |= sz << 6;
+                }
+                nval |= gran << 7;
+                console.log(gran, limit.toString(16), nval.toString(16));
+                desc8[6] = nval;
+                desc8[7] = base >> 24 & 0xFF;
+            } else desc16[3] = offset >>> 16 & 0xFFFF;
+            // Now print it
+            $("dwords").innerHTML = arr2s(desc);
+            $("words").innerHTML = arr2s(desc16);
+            $("bytes").innerHTML = arr2s(desc8);
+        }
+    </script>
 </body>
 
 </html>
